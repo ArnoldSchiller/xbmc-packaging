@@ -18,11 +18,16 @@ ifeq ($(USE_LTO),no)
   NUMCPU = OFF
 endif
 
-DVDREAD = $(shell ls -1tr tools/depends/target/libdvdread/libdvdread-*.tar.gz | tail -1)
-DVDNAV = $(shell ls -1tr tools/depends/target/libdvdnav/libdvdnav-*.tar.gz | tail -1)
-DVDCSS = $(shell ls -1tr tools/depends/target/libdvdcss/libdvdcss-*.tar.gz | tail -1)
-FFMPEG = $(shell ls -1tr tools/depends/target/ffmpeg/ffmpeg-*.tar.gz | tail -1)
-DAVID = $(shell ls -1tr tools/depends/target/dav1d/dav1d-*.tar.gz | tail -1)
+DVDREAD_VER = $(shell awk -F= '/^VERSION/ { print $$2 }' tools/depends/target/libdvdread/LIBDVDREAD-VERSION)
+DVDREAD = $(shell ls -1 tools/depends/target/libdvdread/libdvdread-$(DVDREAD_VER).tar.* | grep -E "(gz|bz2|xz)$$")
+DVDNAV_VER = $(shell awk -F= '/^VERSION/ { print $$2 }' tools/depends/target/libdvdnav/LIBDVDNAV-VERSION)
+DVDNAV = $(shell ls -1 tools/depends/target/libdvdnav/libdvdnav-$(DVDNAV_VER).tar.* | grep -E "(gz|bz2|xz)$$")
+DVDCSS_VER = $(shell awk -F= '/^VERSION/ { print $$2 }' tools/depends/target/libdvdcss/LIBDVDCSS-VERSION)
+DVDCSS = $(shell ls -1 tools/depends/target/libdvdcss/libdvdcss-$(DVDCSS_VER).tar.* | grep -E "(gz|bz2|xz)$$")
+FFMPEG_VER = $(shell awk -F= '/^VERSION/ { print $$2 }' tools/depends/target/ffmpeg/FFMPEG-VERSION)
+FFMPEG = $(shell ls -1 tools/depends/target/ffmpeg/ffmpeg-$(FFMPEG_VER).tar.* | grep -E "(gz|bz2|xz)$$")
+DAVID_VER = $(shell awk -F= '/^VERSION/ { print $$2 }' tools/depends/target/dav1d/DAV1D-VERSION)
+DAVID = $(shell ls -1 tools/depends/target/dav1d/dav1d-$(DAVID_VER).tar.* | grep -E "(gz|bz2|xz)$$")
 
 ifeq ($(DEB_HOST_ARCH),i386)
   EXTRA_FLAGS += -DFFMPEG_EXTRA_FLAGS=--disable-filter=atadenoise
@@ -45,6 +50,7 @@ KODI_OPTS=\
 -DENABLE_INTERNAL_DAV1D=ON \
 -DENABLE_INTERNAL_FFMPEG=ON \
 -DENABLE_INTERNAL_CROSSGUID=OFF \
+-DENABLE_INTERNAL_RapidJSON=OFF \
 -DENABLE_MICROHTTPD=ON \
 -DENABLE_MYSQLCLIENT=ON \
 -DENABLE_NFS=ON \
@@ -70,6 +76,7 @@ $(EXTRA_FLAGS)
 
 
 override_dh_auto_configure:
+	[ -f "${DVDREAD}" ] && [ -f "${DVDNAV}" ] && [ -f "${DVDCSS}" ] && [ -f "${DAVID}" ] && [ -f "${FFMPEG}" ] || { echo "tarballs not found"; exit 1; }
 	dh_auto_configure --builddir kodi_build -- ${KODI_OPTS}
 
 override_dh_auto_build:
